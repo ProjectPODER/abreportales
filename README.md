@@ -15,19 +15,25 @@ Solicitudes automatizadas al Portal Nacional de Transparencia del INAI.
 * Generar iCal para las solicitudes
 
 ## Instalación
+Desde la terminal de linux realizar los siguientes comandos:
 * ```sudo apt install git nodejs npm```
 * ```git clone ssh://git@gitlab.rindecuentas.org:2203/equipo-qqw/abreportales.git```
 * ```cd abreportales```
 * ```npm install```
 
 ## Configuración
-* Modificar el archivo mensaje.txt con el texto de la solicitud
-* Copiar env.example a .env ```cp env.example .env```
-* Editar el archivo .env y cambiar usuario, clave y cookie
-* Copiar excluidos-example.json a excluidos.json ```cp excluidos-example.json exlucidos.json```
-* Editar el archivo con el listado de nombres o patrones regexp que desee excluir. Para excluir todas las dependencias que incluyan un término, debe escribir ```"/.*termino.*/i",```
+* Dentro de la carpeta abreportales, abrri el archivo mensaje.txt y modificarlo con el texto de la solicitud. Esta se enviará a todas las dependencias federales que no se excluyan.
+* En la terminal, copiar env.example a .env, comando: ```cp env.example .env```
+* Cree su listado de exclusiones (opcional)
+ * Copiar excluidos-example.json a excluidos.json ```cp excluidos-example.json exlucidos.json```
+ * Editar el archivo con el listado de nombres que desee excluir. Para excluir todas las dependencias que incluyan un término, debe escribir ```"/.*termino.*/i",```. Por ejemplo ```.["CRE","/.*PORTUARIA*/i"]```. excluirá a la CRE y a cualquier adimistración portuaria.
+* Editar el archivo .env y poner tu mail de PNT en el campo ABREPORTALES_PNT_USER.
+
+Ya falta poco, recuerda que estás a punto de ahorrarte muchas horas de trabajo.
 
 ### Obtener la cookie
+Para hacer automaticamente solicitudes realistas, necesitamos realizar este paso. Esperamos poder omitirlo en futuras versiones.
+
 * Acceder a PNT
 * Abrir consola F12
 * Abrir solapa de RED o network
