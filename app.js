@@ -59,8 +59,10 @@ function runBatches(cookie) {
   const batches = getBatches();
   console.log("Iniciando. Cantidad de solictudes: ",batches.length);
 
-  for (b in batches) {
-    if (b>0) return;
+  nextBatch(batches,0);
+}
+
+function nextBatch(batches,b) {
     const destinatarios = batches[b];
     let options = {
         "credentials": "include",
@@ -77,7 +79,7 @@ function runBatches(cookie) {
         "method": "POST",
         "mode": "cors"
     };
-    console.log("Realizando solicitud #",b,options);
+    console.log("Realizando solicitud #",b,". Cantidad de destinatarios:",destinatarios.length);
 
     fetch("https://www.plataformadetransparencia.org.mx/group/guest/crear-solicitud?p_p_id=infomexportlet_WAR_infomexportlet100SNAPSHOT&p_p_lifecycle=2&p_p_state=normal&p_p_mode=view&p_p_resource_id=controllerEnviarSolicitud&p_p_cacheability=cacheLevelPage&p_p_col_id=column-1&p_p_col_pos=2&p_p_col_count=3", options).then(res => { return res.text() } )
     .then(text => {
@@ -91,30 +93,37 @@ function runBatches(cookie) {
       }
     } )
     .then(json => {
-      console.log("Solicitud creada");
-
-      //parse json
-      for (r in json.result) {
-        let folio = json.result[r].folio; //0917100005619;
-        let token = json.result[r].token; //F240907BC6D503F1E477D3B026826B303DD6D589;
-        let pdf_filename = folio+'-'+token;
-
-        getPDF(folio,token,pdf_filename);
-
-
+      if (json.errors.length > 0) {
+        console.error("Error al crear solicitud",b,destinatarios,json.errorEdosDep);
       }
+      else {
+        console.log("Solicitud creada #",b);
+
+        //parse json
+        for (r in json.result) {
+          let folio = json.result[r].folio; //0917100005619;
+          let token = json.result[r].token; //F240907BC6D503F1E477D3B026826B303DD6D589;
+          let pdf_filename = folio+'-'+token;
+
+          getPDF(folio,token,pdf_filename);
+
+
+        }
+        nextBatch(batches,b+1);
+      }
+
     });
     // console.log("Fin tanda: ",b);
 
 
 
-  };
-  // console.log("Fin todas las tandas.");
-}
+};
+// console.log("Fin todas las tandas.");
+
 
 
 function getPDF(folio,token,pdf_filename) {
-  console.log("Descargando PDF...",pdf_filename);
+  // console.log("Descargando PDF...",pdf_filename);
 
   //SAVE pdf
   const pdfurl = "https://www.plataformadetransparencia.org.mx/group/guest/crear-solicitud?p_p_id=infomexportlet_WAR_infomexportlet100SNAPSHOT&p_p_lifecycle=2&p_p_state=normal&p_p_mode=view&p_p_resource_id=urlDescargaAcuse&p_p_cacheability=cacheLevelPage&p_p_col_id=column-1&p_p_col_pos=2&p_p_col_count=3&_infomexportlet_WAR_infomexportlet100SNAPSHOT_idInfomex=gof&_infomexportlet_WAR_infomexportlet100SNAPSHOT_folio="+folio+"&_infomexportlet_WAR_infomexportlet100SNAPSHOT_token="+token+"&_infomexportlet_WAR_infomexportlet100SNAPSHOT_idTipo=100";
@@ -141,10 +150,10 @@ function getPDF(folio,token,pdf_filename) {
     pdfParser.on("pdfParser_dataError", errData => console.error(errData.parserError) );
     pdfParser.on("pdfParser_dataReady", pdfData => {
       // getPDFText(pdfData,[15,35,36,39,40,41,44,46,47,50,54,53])
-      console.log("Respuesta de ",getPDFText(pdfData,[15]),"en fecha",getPDFText(pdfData,[39]))
+      console.log("Respuesta de ",getPDFText(pdfData,[15]),"en fecha",getPDFText(pdfData,[39]), "folio", folio)
       fs.writeFile(json_path+pdf_filename+".json", JSON.stringify(pdfData),(err) => {
        if (err) throw err;
-       console.log('Creado',json_path+pdf_filename+".json");
+       // console.log('Creado',json_path+pdf_filename+".json");
      })
     });
 
