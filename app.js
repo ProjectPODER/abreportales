@@ -71,7 +71,7 @@ for (b in batches) {
         "referrer": "https://www.plataformadetransparencia.org.mx/group/guest/crear-solicitud"
       })
       .then(res => {
-        const dest = fs.createWriteStream('./'+pdffilename+'.pdf');
+        const dest = fs.createWriteStream('./pdf/'+pdffilename+'.pdf');
         res.body.pipe(dest);
       })
       .then(() => {
@@ -83,10 +83,10 @@ for (b in batches) {
           console.log("PDF3");
 
           console.log(pdfData);
-          fs.writeFile("./"+pdffilename+".json", JSON.stringify(pdfData));
+          fs.writeFile("./json/"+pdffilename+".json", JSON.stringify(pdfData));
         });
 
-        pdfParser.loadPDF("./"+pdffilename+".pdf");
+        pdfParser.loadPDF("./pdf/"+pdffilename+".pdf");
         console.log("PDF2");
 
       })
