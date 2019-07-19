@@ -1,6 +1,8 @@
 # Abreportales
 Solicitudes automatizadas al Portal Nacional de Transparencia del INAI.
 
+![Abreportales](abreportales.gif)
+
 ## Funciones implementadas
 * Envía un mismo mensaje a todas las dependencias federales (más de 700)
 * Separa en grupos
@@ -10,7 +12,7 @@ Solicitudes automatizadas al Portal Nacional de Transparencia del INAI.
 
 ## Funciones planificadas
 * Automatizar el login y la cookie
-* Generar iCal para las solicitudes 
+* Generar iCal para las solicitudes
 
 ## Instalación
 * ```sudo apt install git nodejs npm```
