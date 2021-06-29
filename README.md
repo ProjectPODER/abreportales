@@ -17,7 +17,7 @@ Solicitudes automatizadas al Portal Nacional de Transparencia del INAI.
 ## Instalación
 Desde la terminal de linux realizar los siguientes comandos:
 * ```sudo apt install git nodejs npm```
-* ```git clone ssh://git@gitlab.rindecuentas.org:2203/equipo-qqw/abreportales.git```
+* ```git clone https://github.com/ProjectPODER/abreportales.git```
 * ```cd abreportales```
 * ```npm install```
 
