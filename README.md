@@ -1,5 +1,5 @@
-# Abreportales
-Solicitudes automatizadas al Portal Nacional de Transparencia del INAI.
+# Abreportales (alpha)
+Solicitudes automatizadas al Portal Nacional de Transparencia del INAI. Este proyecto está en versión alpha. Puede fallar.
 
 ![Abreportales](abreportales.gif)
 
