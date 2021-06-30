@@ -1,7 +1,7 @@
 {
   "dependencies": {
-    "node-fetch": "2.6.0",
-    "pdf2json": "1.1.8",
-    "dotenv": "^8.0.0"
+    "dotenv": "^8.0.0",
+    "node-fetch": "^2.6.1",
+    "pdf2json": "^1.2.3"
   }
 }
