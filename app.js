@@ -13,7 +13,7 @@ const cookie = process.env.ABREPORTALES_PNT_COOKIE; // 'FACEBOOK_ACCESS_TOKEN_CO
 
 const mensaje_file = process.env.ABREPORTALES_MENSAJE ||"./mensaje.txt";
 const destinatarios_path = process.env.ABREPORTALES_DEPENDENCIAS_PATH ||"./dependencias/";
-const destinatarios_files = process.env.ABREPORTALES_DEPENDENCIA || "gof agu cam coa dur gua mex nay pue sin tab ver bcn chh col hid mic nle que slp tam yuc bcs chp dif gro jal mor oax roo son tla zac";
+const destinatarios_files = process.env.ABREPORTALES_DEPENDENCIAS_FILES || "gof agu cam coa dur gua mex nay pue sin tab ver bcn chh col hid mic nle que slp tam yuc bcs chp dif gro jal mor oax roo son tla zac";
 const exclusion_patterns_file = process.env.ABREPORTALES_EXCLUIDOS || "./excluidos.json"
 
 const batch_size = process.env.ABREPORTALES_BATCH_SIZE || 5;
