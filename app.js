@@ -5,11 +5,41 @@ var dotenv = require('dotenv')
 dotenv.config();
 PDFParser = require("pdf2json");
 
+function fixConsole(method) {
+
+  var log = console[method];
+  
+  console[method] = function () {
+      var first_parameter = arguments[0];
+      var other_parameters = Array.prototype.slice.call(arguments, 1);
+  
+      function formatConsoleDate (date) {
+          var hour = date.getHours();
+          var minutes = date.getMinutes();
+          var seconds = date.getSeconds();
+          var milliseconds = date.getMilliseconds();
+  
+          return '[' +
+                 ((hour < 10) ? '0' + hour: hour) +
+                 ':' +
+                 ((minutes < 10) ? '0' + minutes: minutes) +
+                 ':' +
+                 ((seconds < 10) ? '0' + seconds: seconds) +
+                //  '.' +
+                //  ('00' + milliseconds).slice(-3) +
+                 '] ';
+      }
+  
+      log.apply(console, [formatConsoleDate(new Date()) + first_parameter].concat(other_parameters));
+  };
+}
+
+fixConsole("log");
+fixConsole("error");
+
 //Config
-const user = process.env.ABREPORTALES_PNT_USER; //"data@rindecuentas.org";
-const password = process.env.ABREPORTALES_PNT_PASSWORD; //"Y8wmzjWupBYroyiJumz";
-//jsessionid,  id, USER_UUID, COMPANY_ID,LFR_SESSION_STATE_5859536
-const cookie = process.env.ABREPORTALES_PNT_COOKIE; // 'FACEBOOK_ACCESS_TOKEN_COOKIE=testing; JSESSIONID=0se0aJCArAkUUkqKfCUvK0jq; COOKIE_SUPPORT=true; GUEST_LANGUAGE_ID=es_ES; USER_UUID="rFvOQqkUNNWsTQs5fLfvzW6zTgQK6Cy+q72ePreu1sE="; LFR_SESSION_STATE_5859536=1563565729155; COMPANY_ID=10154; ID=335350674553336d4934647647445a4b4e45776a39773d3d';
+const user = process.env.ABREPORTALES_PNT_USER; //"user@name.com";
+const password = process.env.ABREPORTALES_PNT_PASSWORD; //"password";
 
 const mensaje_file = process.env.ABREPORTALES_MENSAJE ||"./mensaje.txt";
 const destinatarios_path = process.env.ABREPORTALES_DEPENDENCIAS_PATH ||"./dependencias/";
@@ -47,8 +77,8 @@ for (let file in destinatarios_files_array) {
 
 }
 
-// login(runBatches);
-runBatches(cookie);
+login(runBatches);
+// runBatches(cookie);
 // getPDF("0917700005319","776975B773402D9D345BC611ABC44A298861C46F","0917700005319-776975B773402D9D345BC611ABC44A298861C46F");
 
 //Create batches of destinatarios for each request
@@ -66,7 +96,10 @@ function getBatches() {
     }
   }
   // console.log(batches);
-  return batches;
+  return {
+    batches: batches,
+    destinatarios: destinatario_number
+  };
 }
 
 //Test if the name is on the exclussion patterns regular expression list
@@ -77,14 +110,12 @@ function isExcluded(exclusion_patterns,name) {
   })
 }
 
-function runBatches(cookie) {
-  const batches = getBatches();
-  console.log("Iniciando. Cantidad de rondas: ",batches.length);
+function runBatches(batches,cookie) {
 
-  nextBatch(batches,0);
+  nextBatch(batches,0,cookie);
 }
 
-function nextBatch(batches,b) {
+function nextBatch(batches,b,cookie) {
     const destinatarios_batch = batches[b];
     let options = {
         "credentials": "include",
@@ -101,7 +132,8 @@ function nextBatch(batches,b) {
         "method": "POST",
         "mode": "cors"
     };
-    console.log("Realizando solicitud #",b,". Cantidad de destinatarios en esta ronda:",(destinatarios_batch.split("|").length -1));
+    console.log("Realizando solicitud número",b,"de",batches.length," para ",(destinatarios_batch.split("|").length -1), "destinatarios.")
+    console.log("Por favor tenga paciencia...")
 
     fetch("https://www.plataformadetransparencia.org.mx/group/guest/crear-solicitud?p_p_id=infomexportlet_WAR_infomexportlet100SNAPSHOT&p_p_lifecycle=2&p_p_state=normal&p_p_mode=view&p_p_resource_id=controllerEnviarSolicitud&p_p_cacheability=cacheLevelPage&p_p_col_id=column-1&p_p_col_pos=2&p_p_col_count=3", options)
     .then(res => {
@@ -110,7 +142,8 @@ function nextBatch(batches,b) {
         return res.json()
       }
       catch(e) {
-        console.error("Error al crear solicitud - Por favor renueve la cookie",res.text());
+        console.error("Error al crear solicitud - Por favor renueve la cookie o disminuya la cantidad de destinatarios por debajo de 25");
+        console.error("Detalles de soliciutd",res.text())
         return { errors: ["Error al crear solicitud - Por favor renueve la cookie"]}
       }
     } ).catch(e => {
@@ -123,19 +156,21 @@ function nextBatch(batches,b) {
         console.error("Error al crear solicitud",b,destinatarios_batch,json.errorEdosDep);
       }
       else {
-        console.log("Solicitud creada #",b);
+        // console.log("Solicitud creada número",b,"de",batches.length);
 
         //parse json
         for (r in json.result) {
           let folio = json.result[r].folio; //0917100005619;
           let token = json.result[r].token; //F240907BC6D503F1E477D3B026826B303DD6D589;
-          let pdf_filename = folio+'-'+token;
+          let estado = json.result[r].identificador; //cam
+          //e30.eyJleHAiOiIxNjI1ODY3OTc4IiwiZ3VpZHVzdWFyaW8iOiI1ODU5NTM2In0.8PvQMWVwJoOBdl5Ov7747Q73R1J7f8S4J60Y2pSku30
+          let pdf_filename = estado+"-"+folio+'-'+token;
 
-          getPDF(folio,token,pdf_filename);
+          getPDF(folio,token,estado,pdf_filename,cookie);
 
 
         }
-        nextBatch(batches,b+1);
+        nextBatch(batches,b+1,cookie);
       }
 
     });
@@ -148,11 +183,11 @@ function nextBatch(batches,b) {
 
 
 
-function getPDF(folio,token,pdf_filename) {
-  // console.log("Descargando PDF...",pdf_filename);
+function getPDF(folio,token,estado,pdf_filename,cookie) {
+  // console.log("Solicitando acuse PDF...",folio,token);
 
   //SAVE pdf
-  const pdfurl = "https://www.plataformadetransparencia.org.mx/group/guest/crear-solicitud?p_p_id=infomexportlet_WAR_infomexportlet100SNAPSHOT&p_p_lifecycle=2&p_p_state=normal&p_p_mode=view&p_p_resource_id=urlDescargaAcuse&p_p_cacheability=cacheLevelPage&p_p_col_id=column-1&p_p_col_pos=2&p_p_col_count=3&_infomexportlet_WAR_infomexportlet100SNAPSHOT_idInfomex=gof&_infomexportlet_WAR_infomexportlet100SNAPSHOT_folio="+folio+"&_infomexportlet_WAR_infomexportlet100SNAPSHOT_token="+token+"&_infomexportlet_WAR_infomexportlet100SNAPSHOT_idTipo=100";
+  const pdfurl = "https://www.plataformadetransparencia.org.mx/group/guest/crear-solicitud?p_p_id=infomexportlet_WAR_infomexportlet100SNAPSHOT&p_p_lifecycle=2&p_p_state=normal&p_p_mode=view&p_p_resource_id=urlDescargaAcuse&p_p_cacheability=cacheLevelPage&p_p_col_id=column-1&p_p_col_pos=2&p_p_col_count=3&_infomexportlet_WAR_infomexportlet100SNAPSHOT_idInfomex="+estado+"&_infomexportlet_WAR_infomexportlet100SNAPSHOT_folio="+folio+"&_infomexportlet_WAR_infomexportlet100SNAPSHOT_token="+token+"&_infomexportlet_WAR_infomexportlet100SNAPSHOT_idTipo=100";
 
   fetch(pdfurl,{
     "credentials": "include",
@@ -173,10 +208,10 @@ function getPDF(folio,token,pdf_filename) {
 
     let pdfParser = new PDFParser();
 
-    pdfParser.on("pdfParser_dataError", errData => console.error(errData.parserError) );
+    pdfParser.on("pdfParser_dataError", errData => console.error("pdfParser_dataError",errData.parserError) );
     pdfParser.on("pdfParser_dataReady", pdfData => {
       // getPDFText(pdfData,[15,35,36,39,40,41,44,46,47,50,54,53])
-      console.log("Respuesta de ",getPDFText(pdfData,[15]),"en fecha",getPDFText(pdfData,[39]), "folio", folio)
+      console.log("Acuse folio", folio, ". Guardado en",pdf_path+pdf_filename+'.pdf')
       fs.writeFile(json_path+pdf_filename+".json", JSON.stringify(pdfData),(err) => {
        if (err) throw err;
        // console.log('Creado',json_path+pdf_filename+".json");
@@ -198,9 +233,12 @@ function getPDFText(pdfData,indices) {
 
 //Login to PNT and run callback
 function login(callback) {
-  console.log("Login",user);
-  //form_date 1563555061602
-  // _58_formDate
+  const batches = getBatches();
+  console.log("Cantidad de destinatarios:",batches.destinatarios,"en",destinatarios_files_array.length,"estados. Se realizarán",batches.batches.length,"solicitudes de",batch_size,"destinatarios cada una.");
+
+
+  console.log("Inicio de sesión en PNT",user);
+
   fetch("https://www.plataformadetransparencia.org.mx/web/guest/inicio", {
     "headers": {
       "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0",
@@ -220,12 +258,12 @@ function login(callback) {
     .then(resdata => {
       const text = resdata.text;
 
-      const login_cookie = 'FACEBOOK_ACCESS_TOKEN_COOKIE=testing; JSESSIONID=4+hjesVbu+GO8JEXt+-S-4gU; COOKIE_SUPPORT=true; GUEST_LANGUAGE_ID=es_ES; USER_UUID="MqYe4rI5lDA2thSEChFP8wYTxLCd7JoDN18Lu27jDZc="; LFR_SESSION_STATE_5859536=1563559809683'
+      // const login_cookie = 'FACEBOOK_ACCESS_TOKEN_COOKIE=testing; JSESSIONID=4+hjesVbu+GO8JEXt+-S-4gU; COOKIE_SUPPORT=true; GUEST_LANGUAGE_ID=es_ES; USER_UUID="MqYe4rI5lDA2thSEChFP8wYTxLCd7JoDN18Lu27jDZc="; LFR_SESSION_STATE_5859536=1563559809683'
 
       first_position = text.indexOf("_58_formDate")+35;
       second_position = text.indexOf("_58_saveLastPath") - first_position - 31;
       form_date = text.substr(first_position,second_position);
-      console.log("Login 1",form_date, resdata.headers);
+      // console.log("Login 1",form_date, resdata.headers);
       //login
       fetch("https://www.plataformadetransparencia.org.mx/web/guest/inicio?p_p_id=58&p_p_lifecycle=1&p_p_state=maximized&p_p_mode=view&_58_struts_action=%2Flogin%2Flogin", {
         "credentials": "include",
@@ -235,7 +273,7 @@ function login(callback) {
           "Accept-Language": "en-US,en;q=0.5",
           "Content-Type": "application/x-www-form-urlencoded",
           "Upgrade-Insecure-Requests": "1",
-          "Cookie": login_cookie
+          "Cookie": headersToCookieString(resdata.headers)
         },
 
         "referrer": "https://www.plataformadetransparencia.org.mx/web/guest/inicio?p_p_id=58&p_p_lifecycle=1&p_p_state=maximized&p_p_mode=view&_58_struts_action=%2Flogin%2Fcreate_account",
@@ -250,9 +288,10 @@ function login(callback) {
           "headers": headers,
           "text": text
         }}).then(resdata => {
-          console.log("Login 2 - headers",resdata.headers);
-          const login_cookie = 'JSESSIONID=4+hjesVbu+GO8JEXt+-S-4gU; COOKIE_SUPPORT=true; GUEST_LANGUAGE_ID=es_ES; USER_UUID="mxGK7V90NNpzFqBv4LOXBTW4Gi4Lmnz+M6ioMTp5Op8="; COMPANY_ID=10154; ID=335350674553336d4934647647445a4b4e45776a39773d3d';
-          fetch(resdata.headers.get("location"),  {
+          // console.log("Login 2 - headers",resdata.headers);
+          const login_cookie = headersToCookieString(resdata.headers)
+          //'JSESSIONID=4+hjesVbu+GO8JEXt+-S-4gU; COOKIE_SUPPORT=true; GUEST_LANGUAGE_ID=es_ES; USER_UUID="mxGK7V90NNpzFqBv4LOXBTW4Gi4Lmnz+M6ioMTp5Op8="; COMPANY_ID=10154; ID=335350674553336d4934647647445a4b4e45776a39773d3d';
+          fetch("https://www.plataformadetransparencia.org.mx/c",  {
             "headers": {
               "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0",
               "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -269,19 +308,11 @@ function login(callback) {
             "headers": headers,
             "text": text
           }}).then(res => {
-            console.log("Login 3 - headers",resdata.headers.get("set-cookie"));
-            const cookie = 'FACEBOOK_ACCESS_TOKEN_COOKIE=testing; JSESSIONID=4+hjesVbu+GO8JEXt+-S-4gU; COOKIE_SUPPORT=true; GUEST_LANGUAGE_ID=es_ES; USER_UUID="MqYe4rI5lDA2thSEChFP8wYTxLCd7JoDN18Lu27jDZc="; LFR_SESSION_STATE_5859536=1563559801574; COMPANY_ID=10154; ID=335350674553336d4934647647445a4b4e45776a39773d3d';
+            const cookie = headersToCookieString(resdata.headers);
+            console.log("Login cookie",cookie);
+            'FACEBOOK_ACCESS_TOKEN_COOKIE=testing; JSESSIONID=4+hjesVbu+GO8JEXt+-S-4gU; COOKIE_SUPPORT=true; GUEST_LANGUAGE_ID=es_ES; USER_UUID="MqYe4rI5lDA2thSEChFP8wYTxLCd7JoDN18Lu27jDZc="; LFR_SESSION_STATE_5859536=1563559801574; COMPANY_ID=10154; ID=335350674553336d4934647647445a4b4e45776a39773d3d';
 
-            console.log("Login 3 - codes recieved",cookie);
-
-            console.log("Login 3",text.indexOf("user-full-name"));
-            if(text.indexOf("user-full-name") != -1) {
-              console.log("Login success",text.substr(text.indexOf("user-full-name")+16,20));
-              callback(cookie);
-            }
-            else {
-              console.error("Login failed");
-            }
+            callback(batches.batches,cookie);
           })
         });
       })
@@ -289,3 +320,21 @@ function login(callback) {
   })
 })
 };
+
+
+function headersToCookieString(headers) {
+  let cookieHeader = headers.get("set-cookie");
+  cookieArray = cookieHeader.split("; Path=/")
+  cookieValues = cookieArray.map(c => { 
+    return c.replace("HttpOnly",", ")
+    .replace(/Expires=.*/,"")
+    .replace("; ","").replace(", ","")
+    .replace("Version=1","").replace("Domain=.plataformadetransparencia.org.mx","")
+    .split(", ").map(e => { return e.replace("; ","") }) 
+  });
+  // console.log("cookieValues",cookieValues)
+  let joined = cookieValues.map(c => { return c.join("; ") });
+  let rejoined = joined.join("; ").replace(/; ;/g,";")
+  // console.log("headersToCookieString",rejoined)
+  return rejoined;
+}
