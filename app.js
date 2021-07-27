@@ -86,6 +86,7 @@ login(runBatches);
 function getBatches() {
   let batches = [];
   destinatario_number = 0;
+  destinatario_total = 0;
   for (d in destinatarios) {
     // console.log(d,destinatarios[d],isExcluded(exclusion_patterns,destinatarios[d].nombre));
     if (!isExcluded(exclusion_patterns,destinatarios[d].nombre)) {
@@ -94,11 +95,13 @@ function getBatches() {
       batches[batch_number] +=destinatarios[d].estado+"_"+destinatarios[d].id+"_"+destinatarios[d].nombre+"|";
       destinatario_number++;
     }
+    destinatario_total++;
   }
   // console.log(batches);
   return {
     batches: batches,
-    destinatarios: destinatario_number
+    destinatarios: destinatario_number,
+    destinatarios_totales: destinatario_total
   };
 }
 
@@ -110,9 +113,8 @@ function isExcluded(exclusion_patterns,name) {
   })
 }
 
-function runBatches(batches,cookie) {
-
-  nextBatch(batches,0,cookie);
+function runBatches(batches,first,cookie) {
+  nextBatch(batches,first,cookie);
 }
 
 function nextBatch(batches,b,cookie) {
@@ -132,7 +134,7 @@ function nextBatch(batches,b,cookie) {
         "method": "POST",
         "mode": "cors"
     };
-    console.log("Realizando solicitud número",b,"de",batches.length," para ",(destinatarios_batch.split("|").length -1), "destinatarios.")
+    console.log("Realizando solicitud número",(b+1),"de",batches.length," para ",(destinatarios_batch.split("|").length -1), "destinatarios.")
     console.log("Por favor tenga paciencia...")
 
     fetch("https://www.plataformadetransparencia.org.mx/group/guest/crear-solicitud?p_p_id=infomexportlet_WAR_infomexportlet100SNAPSHOT&p_p_lifecycle=2&p_p_state=normal&p_p_mode=view&p_p_resource_id=controllerEnviarSolicitud&p_p_cacheability=cacheLevelPage&p_p_col_id=column-1&p_p_col_pos=2&p_p_col_count=3", options)
@@ -142,18 +144,24 @@ function nextBatch(batches,b,cookie) {
         return res.json()
       }
       catch(e) {
-        console.error("Error al crear solicitud - Por favor renueve la cookie o disminuya la cantidad de destinatarios por debajo de 25");
+        console.error("Error al crear solicitud - Por favor renueve la cookie o disminuya la cantidad de destinatarios por debajo de 25. Error de JSON.",e);
         console.error("Detalles de soliciutd",res.text())
-        return { errors: ["Error al crear solicitud - Por favor renueve la cookie"]}
+        return { errors: ["Error al crear solicitud - Se debe renovar la sesión"]}
       }
     } ).catch(e => {
-      console.error("Error al crear solicitud - Por favor renueve la cookie",e);
-      return { errors: ["Error al crear solicitud - Por favor renueve la cookie"]}
+      console.error("Error al crear solicitud - Se debe renovar la sesión",e);
+      // console.log("res:",res,res.text())
+
+      console.log("Iiniciando sesión nuevamente...")
+      login(runBatches,b);
+
+      return { errors: ["Error al crear solicitud - Se debe renovar la sesión"]}
 
     })
     .then(json => {
       if (json.errors && json.errors.length > 0) {
-        console.error("Error al crear solicitud",b,destinatarios_batch,json.errorEdosDep);
+        console.error("Error remoto al crear solicitud.",b,destinatarios_batch,json.errorEdosDep);
+        console.log(JSON.stringify(json));
       }
       else {
         // console.log("Solicitud creada número",b,"de",batches.length);
@@ -166,11 +174,23 @@ function nextBatch(batches,b,cookie) {
           //e30.eyJleHAiOiIxNjI1ODY3OTc4IiwiZ3VpZHVzdWFyaW8iOiI1ODU5NTM2In0.8PvQMWVwJoOBdl5Ov7747Q73R1J7f8S4J60Y2pSku30
           let pdf_filename = estado+"-"+folio+'-'+token;
 
-          getPDF(folio,token,estado,pdf_filename,cookie);
+          getPDF(folio,token,estado,pdf_filename,cookie,destinatarios_batch,r);
 
 
         }
-        nextBatch(batches,b+1,cookie);
+
+        if (batches.length == (b+1)) {
+          console.log("Terminadas todas las solicitudes. Abreportales ha finalizado.")
+        }
+        else {
+          let waitMs= 1000*30;
+          console.log("Esperando",waitMs,"milisegundos");
+          setTimeout(function () {
+            nextBatch(batches,b+1,cookie);
+          },waitMs)
+        }
+      
+        // nextBatch(batches,b+1,cookie);
       }
 
     });
@@ -183,8 +203,16 @@ function nextBatch(batches,b,cookie) {
 
 
 
-function getPDF(folio,token,estado,pdf_filename,cookie) {
+function getPDF(folio,token,estado,pdf_filename,cookie,destinatarios_batch,r) {
   // console.log("Solicitando acuse PDF...",folio,token);
+  
+  let alldesties = [];
+  destinatarios_batch.split("|").map((d,i) => {
+    let dest_components = d.split("_");
+    let dest_state = dest_components[0]
+    let dest_name = dest_components[(dest_components.length-1)]
+    alldesties.push(dest_name+" ("+dest_state+", "+(i+1)+")");
+  })
 
   //SAVE pdf
   const pdfurl = "https://www.plataformadetransparencia.org.mx/group/guest/crear-solicitud?p_p_id=infomexportlet_WAR_infomexportlet100SNAPSHOT&p_p_lifecycle=2&p_p_state=normal&p_p_mode=view&p_p_resource_id=urlDescargaAcuse&p_p_cacheability=cacheLevelPage&p_p_col_id=column-1&p_p_col_pos=2&p_p_col_count=3&_infomexportlet_WAR_infomexportlet100SNAPSHOT_idInfomex="+estado+"&_infomexportlet_WAR_infomexportlet100SNAPSHOT_folio="+folio+"&_infomexportlet_WAR_infomexportlet100SNAPSHOT_token="+token+"&_infomexportlet_WAR_infomexportlet100SNAPSHOT_idTipo=100";
@@ -211,7 +239,9 @@ function getPDF(folio,token,estado,pdf_filename,cookie) {
     pdfParser.on("pdfParser_dataError", errData => console.error("pdfParser_dataError",errData.parserError) );
     pdfParser.on("pdfParser_dataReady", pdfData => {
       // getPDFText(pdfData,[15,35,36,39,40,41,44,46,47,50,54,53])
-      console.log("Acuse folio", folio, ". Guardado en",pdf_path+pdf_filename+'.pdf')
+
+      console.log("Acuse folio", folio," para ",alldesties[r], ". Guardado en",pdf_path+pdf_filename+'.pdf')
+
       fs.writeFile(json_path+pdf_filename+".json", JSON.stringify(pdfData),(err) => {
        if (err) throw err;
        // console.log('Creado',json_path+pdf_filename+".json");
@@ -232,9 +262,14 @@ function getPDFText(pdfData,indices) {
 }
 
 //Login to PNT and run callback
-function login(callback) {
+function login(callback,first=0) {
   const batches = getBatches();
-  console.log("Cantidad de destinatarios:",batches.destinatarios,"en",destinatarios_files_array.length,"estados. Se realizarán",batches.batches.length,"solicitudes de",batch_size,"destinatarios cada una.");
+  if (first == 0) {
+    console.log("Cantidad de destinatarios seleccionados:",batches.destinatarios,"(de un total de", batches.destinatarios_totales, ") en",destinatarios_files_array.length,"estados. Se realizarán",(batches.batches.length),"solicitudes de",batch_size,"destinatarios cada una.");
+  }
+  else {
+    console.log("Continuando con solicitudes a:",batches.destinatarios," destinatarios selecionados (de un total de", batches.destinatarios_totales, ") en",destinatarios_files_array.length,"estados. Restan",(batches.batches.length-first),"solicitudes de",batch_size,"destinatarios cada una.");
+  }
 
 
   console.log("Inicio de sesión en PNT",user);
@@ -312,7 +347,7 @@ function login(callback) {
             console.log("Login cookie",cookie);
             'FACEBOOK_ACCESS_TOKEN_COOKIE=testing; JSESSIONID=4+hjesVbu+GO8JEXt+-S-4gU; COOKIE_SUPPORT=true; GUEST_LANGUAGE_ID=es_ES; USER_UUID="MqYe4rI5lDA2thSEChFP8wYTxLCd7JoDN18Lu27jDZc="; LFR_SESSION_STATE_5859536=1563559801574; COMPANY_ID=10154; ID=335350674553336d4934647647445a4b4e45776a39773d3d';
 
-            callback(batches.batches,cookie);
+            callback(batches.batches,first,cookie);
           })
         });
       })
