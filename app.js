@@ -19,6 +19,8 @@ const pdf_path = process.env.ABREPORTALES_PDF_PATH || './pdf/';
 const json_path = process.env.ABREPORTALES_JSON_PATH || "./json/";
 
 
+prepareConsole() 
+
 //Read files
 const mensaje = fs.readFileSync(mensaje_file, 'utf8');
 const filters = JSON.parse(fs.readFileSync(exclusion_patterns_file, 'utf8'));
@@ -29,7 +31,6 @@ const destinatarios = getDestinatarios(filters.estados); //example: "gof_9171_AD
 const destinatarios_filtrados = filterDestinatarios(destinatarios);
 // showDestinatarios(destinatarios_filtrados);
 
-prepareConsole() 
 
 const destinatarios_totales = destinatarios.length
 const destinatarios_filtrados_count = destinatarios_filtrados.length;
@@ -38,7 +39,7 @@ const estados_count = getEstados(filters.estados).length;
 
 const batches = getBatches(destinatarios_filtrados);
 
-// login(batches,runBatches);
+login(batches,runBatches);
 
 
 function getDestinatarios(estados) {
@@ -194,6 +195,7 @@ function headersToCookieString(headers) {
 
 //Filter excluded
 function filterDestinatarios(destinatarios) {
+  console.log("Destinatarios seleccionados:")
   let destinatarios_filtered = [];
   for (d in destinatarios) {
     // console.log(d,destinatarios[d],isExcluded(exclusion_patterns,destinatarios[d].nombre));
