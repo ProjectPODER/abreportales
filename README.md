@@ -4,17 +4,17 @@ Solicitudes automatizadas al Portal Nacional de Transparencia del INAI. Este pro
 ![Abreportales](abreportales.gif)
 
 ## Funciones implementadas
-* Envía un mismo mensaje a todas las dependencias federales (más de 700)
-* Separa en grupos
-* Almacena todos los PDF del resultado en una carpeta
-* Emite en pantalla las fechas de las solicitudes
-* Permite omitir dependencias por patrones
+* Envía un mismo mensaje a todas las dependencias federales y estatales (más de 6000)
+* Permite seleccionar y omitir dependencias por patrones.
+* Realiza múltiples solicitudes en simultáneo.
+* Almacena todos los acuses de recibo en PDF en una carpeta.
+* Menciona a qué institución pertenece cada acuse de recibo (impreciso).
 
 ## Funciones planificadas
 * ~~Automatizar el login y la cookie~~ (hecho)
-* Generar iCal para las solicitudes
+* Detectar las fechas de respuesta de acuerdo al formato del acuse de recibo de cada estado.
+* Generar iCal para agregar al calendario las fechas de respuesta de las solicitudes
 * Interfaz web
-* Mejorar capacidad de filtrar destinatarios
 
 ## Instalación
 Desde la terminal de linux realizar los siguientes comandos:
@@ -29,10 +29,11 @@ Desde la terminal de linux realizar los siguientes comandos:
 * Editar el archivo .env y modificar:
   * Poner tu mail de PNT en el campo ABREPORTALES_PNT_USER.
   * Poner tu contraseña de PNT en el campo ABREPORTALES_PNT_PASSWORD.
-* Poner en el campo ABREPORTALES_DEPENDENCIAS_FILES los nombres de los estados a los que quiera consultar. "gof" es el gobierno federal.
-* (opcional) Cree su listado de exclusiones
-  * Copiar excluidos-example.json a excluidos.json ```cp excluidos-example.json exlucidos.json```
-  * Editar el archivo con el listado de nombres que desee excluir. Para excluir todas las dependencias que incluyan un término, debe escribir ```"/.*termino.*/i",```. Por ejemplo ```.["CRE","/.*PORTUARIA*/i"]```. excluirá a la CRE y a cualquier adimistración portuaria.
+* Cree su configuración de filtros
+  * Copiar filtros-example.json a filtros.json ```cp filtros-example.json filtros.json```
+  * Evitar el archivo y poner true en los estados que se quieran seleccionar y false en los estados que no. "gof" es el gobierno federal.
+  * Agregar en el listado de incluidos, un listado de térmios que se quieran incluir. ".*" coincide con todos. "Ayuntamiento" coincide sólo con las instituciones que tengan ese término en su nombre (nota: muchas instituciones que tienen un término no necesariamente son la institución)
+  * Agregar en el listado de excluídos aquellos términos que no quiera incluir, por ejemplo "DIF". Si quiere excluir un término sólo al inicio del nombre puede hacerlo con un circunflejo "^DIF". Ambos campos aceptan expresiones regulares sin necesidad de incluir las barras.
 
 
 ## Actualizar destinatarios
