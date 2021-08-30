@@ -1,0 +1,46 @@
+{
+    "//Ayuda": "Cada estado es true (habilitado) o false (deshabilitad). gof significa el gobierno federal",
+    "estados": {
+        "gof": true,
+        "nay": true, 
+        "dur": true, 
+        "cam": true, 
+        "agu": true, 
+        "coa": true, 
+        "gua": true, 
+        "mex": true, 
+        "pue": true, 
+        "sin": true, 
+        "tab": true, 
+        "ver": true, 
+        "bcn": true, 
+        "chh": true, 
+        "col": true, 
+        "hid": true, 
+        "mic": true, 
+        "nle": true, 
+        "que": true, 
+        "slp": true, 
+        "tam": true, 
+        "yuc": true, 
+        "bcs": true, 
+        "chp": true, 
+        "dif": true, 
+        "gro": true, 
+        "jal": true, 
+        "mor": true, 
+        "oax": true, 
+        "roo": true, 
+        "son": true, 
+        "tla": true, 
+        "zac": true
+    },
+    "///Ayuda": "Patrones de inclusión. Sólo las dependencias cuyo nombre coincida con estos patrones serán incluídas. Acepta expresiones regulares. Poner .* para incluir todas.",
+    "incluidos": [
+
+    ],
+    "////Ayuda": "Patrones de exclusión. Las dependencias cuyo nombre coincida con estos patrones serán excluídas. Acepta expresiones regulares. Se puede poner un ^ para filtrar la palabra sólo al pricipio del nombre.",
+    "excluidos": [
+
+    ]
+}
