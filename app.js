@@ -19,7 +19,7 @@ const pdf_path = process.env.ABREPORTALES_PDF_PATH || './pdf/';
 const json_path = process.env.ABREPORTALES_JSON_PATH || "./json/";
 
 
-prepareConsole() 
+prepareConsole()
 
 //Read files
 const mensaje = fs.readFileSync(mensaje_file, 'utf8');
@@ -52,7 +52,7 @@ function getDestinatarios(estados) {
     }
     let estado = estados_filtrados[file];
     let destinatarios_file_path = destinatarios_path+estado+".json";
-  
+
     try {
       let destinatarios_json = JSON.parse(fs.readFileSync(destinatarios_file_path, 'utf8'));
       // console.log("Leyendo",destinatarios_json.catalogo.length,"destinatarios de",estado)
@@ -63,7 +63,7 @@ function getDestinatarios(estados) {
     catch (e) {
       console.error("No se pudo leer archivo de destinatarios",destinatarios_file_path,e.message)
     }
-  
+
   }
   return destinatarios;
 }
@@ -179,12 +179,12 @@ function login(batches,callback,first=0) {
 function headersToCookieString(headers) {
   let cookieHeader = headers.get("set-cookie");
   cookieArray = cookieHeader.split("; Path=/")
-  cookieValues = cookieArray.map(c => { 
+  cookieValues = cookieArray.map(c => {
     return c.replace("HttpOnly",", ")
     .replace(/Expires=.*/,"")
     .replace("; ","").replace(", ","")
     .replace("Version=1","").replace("Domain=.plataformadetransparencia.org.mx","")
-    .split(", ").map(e => { return e.replace("; ","") }) 
+    .split(", ").map(e => { return e.replace("; ","") })
   });
   // console.log("cookieValues",cookieValues)
   let joined = cookieValues.map(c => { return c.join("; ") });
@@ -207,7 +207,7 @@ function filterDestinatarios(destinatarios) {
       // console.log(",\"",destinatarios[d].nombre.replace("\"","").replace("\"",""),"\",\"\"")
     }
   }
-  
+
   return destinatarios_filtered
 }
 
@@ -239,7 +239,7 @@ function getBatches(destinatarios) {
     batches[batch_number] +=destinatarios[d].estado+"_"+destinatarios[d].id+"_"+destinatarios[d].nombre+"|";
     destinatario_number++;
   }
-  
+
   // console.log(batches);
   return batches
 }
@@ -252,7 +252,7 @@ function runBatches(batches,first,cookie) {
   else {
     console.log("Continuando con solicitudes a:",destinatarios_filtrados_count," destinatarios selecionados (de un total de", destinatarios_totales, ") en",estados_count,"estados. Restan",(batches.length-first),"solicitudes de",batch_size,"destinatarios cada una.");
   }
-  
+
   nextBatch(batches,first,cookie);
 }
 
@@ -333,7 +333,7 @@ function nextBatch(batches,b,cookie) {
             nextBatch(batches,b+1,cookie);
           },waitMs)
         }
-      
+
         // nextBatch(batches,b+1,cookie);
       }
 
@@ -346,10 +346,9 @@ function nextBatch(batches,b,cookie) {
 // console.log("Fin todas las tandas.");
 
 
-
 function getPDF(folio,token,estado,pdf_filename,cookie,destinatarios_batch,r) {
   // console.log("Solicitando acuse PDF...",folio,token);
-  
+
   let alldesties = [];
   destinatarios_batch.split("|").map((d,i) => {
     let dest_components = d.split("_");
@@ -416,23 +415,23 @@ function showDestinatarios(destinatarios) {
 function prepareConsole() {
   fixConsole("log");
   fixConsole("error");
-  
+
 }
 
 function fixConsole(method) {
 
   var log = console[method];
-  
+
   console[method] = function () {
       var first_parameter = arguments[0];
       var other_parameters = Array.prototype.slice.call(arguments, 1);
-  
+
       function formatConsoleDate (date) {
           var hour = date.getHours();
           var minutes = date.getMinutes();
           var seconds = date.getSeconds();
           var milliseconds = date.getMilliseconds();
-  
+
           return '[' +
                  ((hour < 10) ? '0' + hour: hour) +
                  ':' +
@@ -443,7 +442,7 @@ function fixConsole(method) {
                 //  ('00' + milliseconds).slice(-3) +
                  '] ';
       }
-  
+
       log.apply(console, [formatConsoleDate(new Date()) + first_parameter].concat(other_parameters));
   };
 }
