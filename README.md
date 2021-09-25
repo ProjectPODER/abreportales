@@ -24,21 +24,21 @@ Desde la terminal de linux realizar los siguientes comandos:
 * ```npm install```
 
 ## Configuración
-* Dentro de la carpeta abreportales, abrri el archivo mensaje.txt y modificarlo con el texto de la solicitud. Esta se enviará a todas las dependencias federales que no se excluyan.
+* Dentro de la carpeta abreportales, abrir el archivo mensaje.txt y modificarlo con el texto de la solicitud. Ésta se enviará a todas las dependencias federales que no se excluyan.
 * En la terminal, copiar env.example a .env, comando: ```cp env.example .env```
 * Editar el archivo .env y modificar:
   * Poner tu mail de PNT en el campo ABREPORTALES_PNT_USER.
   * Poner tu contraseña de PNT en el campo ABREPORTALES_PNT_PASSWORD.
 * Cree su configuración de filtros
   * Copiar filtros-example.json a filtros.json ```cp filtros-example.json filtros.json```
-  * Evitar el archivo y poner true en los estados que se quieran seleccionar y false en los estados que no. "gof" es el gobierno federal.
+  * Editar el archivo y poner true en los estados que se quieran seleccionar y false en los estados que no. "gof" es el gobierno federal.
   * Agregar en el listado de incluidos, un listado de térmios que se quieran incluir. ".*" coincide con todos. "Ayuntamiento" coincide sólo con las instituciones que tengan ese término en su nombre (nota: muchas instituciones que tienen un término no necesariamente son la institución)
-  * Agregar en el listado de excluídos aquellos términos que no quiera incluir, por ejemplo "DIF". Si quiere excluir un término sólo al inicio del nombre puede hacerlo con un circunflejo "^DIF". Ambos campos aceptan expresiones regulares sin necesidad de incluir las barras.
+  * Agregar en el listado de excluidos aquellos términos que no quiera incluir, por ejemplo "DIF". Si quiere excluir un término sólo al inicio del nombre puede hacerlo con un circunflejo "^DIF". Ambos campos aceptan expresiones regulares sin necesidad de incluir las barras.
 
 
 ## Actualizar destinatarios
 
-Abreportales incluye un listado de dependencias por estado en la carpeta dependencias. Es posible que la PNT modifique el listado de dependencias ocasionalmente, para poder enviar a todas las nuevas dependencias desde Abreportales debe ejecutar:
+Abreportales incluye un listado de dependencias por estado en la carpeta `dependencias`. Es posible que la PNT modifique el listado de dependencias ocasionalmente, para poder enviar a todas las nuevas dependencias desde Abreportales debe ejecutar:
 
 ```node update_dependencias.json```
 
