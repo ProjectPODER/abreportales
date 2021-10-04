@@ -1,6 +1,8 @@
 # Abreportales (alpha)
 Solicitudes automatizadas al Portal Nacional de Transparencia del INAI. Este proyecto está en versión alpha. Puede fallar.
 
+## Nota: Los últimos camios a la PNT en septiembre 2021 rompieron el funcionamiento de esta aplicación. Revisar discusión en https://github.com/ProjectPODER/abreportales/issues/3
+
 ![Abreportales](abreportales.gif)
 
 ## Funciones implementadas
